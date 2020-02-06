@@ -1,6 +1,6 @@
 [{
 	"year":1920,
-	"amount":500
+	"amount":550
 
 },
 {
@@ -9,6 +9,30 @@
 },
 {
 	"year":1930,
-	"amount":400
+	"amount":460
+},
+{
+	"year":1935,
+	"amount":350
+},
+{
+	"year":1940,
+	"amount":220
+},
+{
+	"year":1945,
+	"amount":250
+},
+{
+	"year":1950,
+	"amount":600
+},
+{
+	"year":1955,
+	"amount":240
+},
+{
+	"year":1960,
+	"amount":645
 }
 ]
