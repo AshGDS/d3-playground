@@ -11,6 +11,28 @@
 </style>
 <body>
 
+<p>From:
+<select name="fromYears" id="fromYears">
+    <option value="1930">1930</option>
+    <option value="1935" selected>1935</option>
+    <option value="1940">1940</option>
+    <option value="1945">1945</option>
+    <option value="1950">1950</option>
+    <option value="1955">1955</option>
+    <option value="1960">1960</option>
+</select></p>
+
+<p>To:<select name="toYears" id="toYears">
+    <option value="1930">1930</option>
+    <option value="1935">1935</option>
+    <option value="1940">1940</option>
+    <option value="1945">1945</option>
+    <option value="1950" selected>1950</option>
+    <option value="1955">1955</option>
+    <option value="1960">1960</option>
+</select>
+</p>
+
 <!-- load the d3.js library -->     
 <script src="https://d3js.org/d3.v4.min.js"></script>
 <script>
@@ -47,50 +69,104 @@ var svg = d3.select("body").append("svg")
     .attr("transform",
           "translate(" + margin.left + "," + margin.top + ")");
 
-// Get the data
-d3.json("years.json", function(error, data) {
 
-  if (error) throw error;
 
-  // format the data
-  data.forEach(function(d) {
-      d.year = d.year;
-      d.amount = +d.amount;
+function isInRange(year, fromYear, toYear) {
+    if(year >= fromYear && year <= toYear) {
+      return true;
+    }
+
+    return false;
+}
+
+function create_bar_chart() {
+
+  svg.selectAll("*").remove();
+
+
+  var fromYearSelector = document.getElementById('fromYears');
+  var fromYear = fromYearSelector.options[fromYearSelector.selectedIndex].value;
+  
+
+  var toYearSelector = document.getElementById('toYears');
+  var toYear = toYearSelector.options[toYearSelector.selectedIndex].value;
+
+
+  if(fromYear > toYear || toYear < fromYear) {
+    fromYear = 1930
+    toYear = 1960
+    alert('Bad input, reverting to 1930-1960');
+  }
+
+    // Get the data
+  d3.json("years.json", function(error, raw_data) {
+
+    if (error) throw error;
+
+    filtered_data = []
+    // format the data
+    raw_data.forEach(function(d, i) {
+
+        if(isInRange(d.year, fromYear, toYear)) {
+          filtered_data.push(d)
+        }
+
+    });
+
+    // Scale the range of the data
+    /*
+      The .domain function is designed to let D3 know what the scope of the data will be. This is what is then passed to the scale function.
+    */
+
+    x.domain(filtered_data.map(function(d) { 
+
+        return d.year
+
+    })); // function(d) { return d.date; } returns all the ‘date’ values in ‘data’
+    /* 
+      The .extent function that finds the maximum and minimum values in the array
+    */
+    y.domain([0, d3.max(filtered_data, function(d) { 
+
+      return d.amount
+
+    })]); // Because the range of values desired on the y axis goes from 0 to the maximum in the data range, that’s exactly what we tell D3.
+
+    // Select all bar classes that D3 generate, and replace them with our chart data
+    svg.selectAll(".bar")
+        .data(filtered_data)
+      .enter().append("rect")
+        .attr("class", "bar")
+        .attr("x", function(d) { return x(d.year); })
+        .attr("width", x.bandwidth())
+        .attr("y", function(d) { return y(d.amount); })
+        .attr("height", function(d) { return height - y(d.amount); });
+
+    // Add the X Axis
+    svg.append("g")
+        .attr("transform", "translate(0," + height + ")")
+        .call(d3.axisBottom(x));
+
+    // Add the Y Axis
+    svg.append("g")
+        .call(d3.axisLeft(y));
+
   });
+}
 
-  var barWidth = width / data.length;
+create_bar_chart()
 
-  // Scale the range of the data
-  /*
-    The .domain function is designed to let D3 know what the scope of the data will be. This is what is then passed to the scale function.
-  */
 
-  x.domain(data.map(function(d) { return d.year; })); // function(d) { return d.date; } returns all the ‘date’ values in ‘data’
-  /* 
-    The .extent function that finds the maximum and minimum values in the array
-  */
-  y.domain([0, d3.max(data, function(d) { return d.amount; })]); // Because the range of values desired on the y axis goes from 0 to the maximum in the data range, that’s exactly what we tell D3.
+document.getElementById('fromYears').addEventListener('change', function(e) {
+    create_bar_chart();
 
-  // Select all bar classes that D3 generate, and replace them with our chart data
-  svg.selectAll(".bar")
-      .data(data)
-    .enter().append("rect")
-      .attr("class", "bar")
-      .attr("x", function(d) { return x(d.year); })
-      .attr("width", x.bandwidth())
-      .attr("y", function(d) { return y(d.amount); })
-      .attr("height", function(d) { return height - y(d.amount); });
+})
 
-  // Add the X Axis
-  svg.append("g")
-      .attr("transform", "translate(0," + height + ")")
-      .call(d3.axisBottom(x));
+document.getElementById('toYears').addEventListener('change', function(e) {
+    create_bar_chart();
+})
 
-  // Add the Y Axis
-  svg.append("g")
-      .call(d3.axisLeft(y));
-
-});
 
 </script>
+
 </body>
